@@ -1,0 +1,27 @@
+spring:
+    application:
+        name: ecommerce-gateway
+
+    cloud:
+      discovery:
+        locator:
+          enabled: true
+          lower-case-service-id: true
+      gateway:
+        routes:
+          - id: user-service
+            uri: lb://USER-SERVICE
+            predicates:
+              - Path=/user/**
+
+
+logging:
+  level:
+    org.springframework.cloud.gateway: DEBUG
+
+
+server:
+  port: 8080
+
+
+

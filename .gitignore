@@ -1,0 +1,57 @@
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Compiled class files
+*.class
+
+# Maven target directories
+target/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Temporary files
+*.tmp
+*.bak
+*.swp
+
+# Environment files (if you use them)
+.env
+.env.*
+
+# Docker artifacts
+**/Dockerfile
+**/docker-compose*.yml
+**/.dockerignore
+
+# VSCode (if used)
+.vscode/
+
+# Build tools
+.gradle/
+.mvn/
+build/
+
+# Dependency directories (if using Node for UI modules)
+node_modules/
+
+# Spring Boot devtools restart files
+.spring-boot-devtools.properties
+
+# Local database or mount files (if any)
+*.h2.db
+*.mv.db
+
+# Coverage reports
+coverage/
+jacoco.exec
+
+# Misc
+nohup.out
