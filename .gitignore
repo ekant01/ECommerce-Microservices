@@ -27,9 +27,9 @@ Thumbs.db
 .env.*
 
 # Docker artifacts
-**/Dockerfile
-**/docker-compose*.yml
-**/.dockerignore
+#**/Dockerfile
+#**/docker-compose*.yml
+#**/.dockerignore
 
 # VSCode (if used)
 .vscode/
