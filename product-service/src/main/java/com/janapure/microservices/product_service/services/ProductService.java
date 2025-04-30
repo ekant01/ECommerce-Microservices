@@ -125,5 +125,24 @@ public class ProductService {
             return productDTO;
         }).toList();
     }
+
+    public ProductDTO getProductById(String productId) {
+        // Here you would typically fetch the product by ID from the database
+        Product product = productRepo.findById(productId).orElse(null);
+        if (product != null) {
+            ProductDTO productDTO = new ProductDTO();
+            productDTO.setId(product.getId());
+            productDTO.setProductName(product.getProductName());
+            productDTO.setDescription(product.getDescription());
+            productDTO.setPrice(product.getPrice());
+            productDTO.setCategory(product.getCategory());
+            productDTO.setAttributes(product.getAttributes());
+            productDTO.setCreatedAt(product.getCreatedAt());
+            productDTO.setModifiedAt(product.getModifiedAt());
+            return productDTO;
+        }else {
+            throw new RuntimeException("Product not found");
+        }
+    }
 }
 

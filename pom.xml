@@ -21,6 +21,11 @@
         <module>product-service</module>
         <module>service-registry</module>
         <module>ecommerce-gateway</module>
+        <module>cart-service</module>
+        <module>order-service</module>
+        <module>payment-service</module>
+        <module>notification-service</module>
+        <module>sagaorchestration-service</module>
 
         <!-- Add other microservices here -->
     </modules>

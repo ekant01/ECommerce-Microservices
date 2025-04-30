@@ -23,7 +23,7 @@ public class ProductController {
         this.productService=productService;
     }
 
-    @RequestMapping(path = "/api/product",method = GET)
+    @RequestMapping(path = "/products",method = GET)
     @ResponseStatus(HttpStatus.OK)
     public List<ProductDTO> getAllProducts(
             @RequestParam(required = false) String productName,
@@ -39,25 +39,32 @@ public class ProductController {
     }
 
 
-    @RequestMapping(path = "/api/product",method = POST)
+    @RequestMapping(path = "/products",method = POST)
     @ResponseStatus(HttpStatus.CREATED)
     public ProductDTO addProduct(@RequestBody ProductDTO productDTO){
-System.out.println(".................."+productDTO);
+
         log.info("Adding product: {}", productDTO);
         return productService.addProduct(productDTO);
     }
 
-    @RequestMapping(path = "/api/product",method = PUT)
+    @RequestMapping(path = "/product",method = PUT)
     @ResponseStatus(HttpStatus.OK)
     public ProductDTO updateProduct(@RequestBody ProductDTO productDTO){
         log.info("Updating product: {}", productDTO);
         return productService.updateProduct(productDTO);
     }
 
-    @RequestMapping(path = "/api/product/{productId}",method = DELETE)
+    @RequestMapping(path = "/product/{productId}",method = DELETE)
     public void deleteProduct(@PathVariable String productId){
         log.info("Deleting product with ID: {}", productId);
         productService.deleteProduct(productId);
+    }
+
+    @RequestMapping(path = "/product/{productId}",method = GET)
+    @ResponseStatus(HttpStatus.OK)
+    public ProductDTO getProductById(@PathVariable String productId){
+        log.info("Fetching product with ID: {}", productId);
+        return productService.getProductById(productId);
     }
 
     @GetMapping("/ping")

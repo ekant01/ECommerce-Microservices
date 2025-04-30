@@ -26,9 +26,7 @@ public class ReviewController {
             @PathVariable String productId
     ) {
         // Implement logic to save the review
-
-        reviewService.createReview(review, productId);
-
+       // reviewService.createReview(review, productId);
         return ResponseEntity.status(HttpStatus.CREATED).body(reviewService.createReview(review, productId));
     }
 

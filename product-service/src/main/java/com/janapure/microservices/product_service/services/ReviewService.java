@@ -1,7 +1,9 @@
 package com.janapure.microservices.product_service.services;
 
 import com.janapure.microservices.product_service.dto.ReviewDTO;
+import com.janapure.microservices.product_service.model.Product;
 import com.janapure.microservices.product_service.model.Review;
+import com.janapure.microservices.product_service.repositories.ProductRepo;
 import com.janapure.microservices.product_service.repositories.ReviewRepo;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,8 +18,12 @@ public class ReviewService {
     @Autowired
     private ReviewRepo reviewRepo;
 
+    @Autowired
+    private ProductRepo productRepo;
+
     public ReviewDTO createReview(ReviewDTO review, String productId) {
 
+        Product product = productRepo.findByPdid(productId);
 
         Review reviewEntity = new Review();
         reviewEntity.setProductId(productId);

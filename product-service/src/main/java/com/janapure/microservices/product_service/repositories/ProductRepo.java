@@ -8,4 +8,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface ProductRepo extends MongoRepository<Product, String>, PagingAndSortingRepository<Product,String> {
 
+    Product findByPdid(String productId);
+
 }
