@@ -1,0 +1,54 @@
+syntax = "proto3";
+
+package user;
+
+option java_multiple_files = true;
+option java_package = "com.janapure.microservices.proto";
+option java_outer_classname = "UserProto";
+
+service UserService {
+  rpc GetUserInfo (UserIdRequest) returns (UserInfoResponse);
+  rpc GetAddress (UserIdRequest) returns (UserAddressResponse);
+  rpc ValidateUser (UserIdRequest) returns (ValidateUserResponse);
+}
+
+// === Request Messages ===
+
+message UserIdRequest {
+  string userId = 1;
+}
+
+message ValidateUserRequest {
+  string mobileNo = 1;
+}
+
+// === Response Messages ===
+
+message UserInfoResponse {
+  string userId = 1;
+  string firstName = 2;
+  string lastName = 3;
+  string mobileNo = 4;
+  repeated string roles = 5;
+}
+
+message Address {
+  string addressId = 1;
+  string addressLine1 = 2;
+  string addressLine2 = 3;
+  //string street = 2;
+  string city = 4;
+  string state = 5;
+  string postalCode = 6;
+  string country = 7;
+}
+
+message UserAddressResponse {
+  string userId = 1;
+  repeated Address addresses = 2;
+}
+
+message ValidateUserResponse {
+  bool isValid = 1;
+  string userId = 2;
+}

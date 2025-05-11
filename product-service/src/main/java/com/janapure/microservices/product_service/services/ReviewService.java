@@ -23,7 +23,7 @@ public class ReviewService {
 
     public ReviewDTO createReview(ReviewDTO review, String productId) {
 
-        Product product = productRepo.findByPdid(productId);
+        Product product = productRepo.findByPdId(productId);
 
         Review reviewEntity = new Review();
         reviewEntity.setProductId(productId);

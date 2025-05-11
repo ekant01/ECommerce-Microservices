@@ -1,0 +1,45 @@
+syntax = "proto3";
+
+package product;
+
+option java_multiple_files = true;
+option java_package = "com.janapure.microservices.proto";
+option java_outer_classname = "ProductProto";
+
+service ProductService {
+  rpc GetProductInfo(ProductRequest) returns (ProductResponse);
+  rpc CheckStock(CheckStockRequest) returns (CheckStockResponse);
+  rpc ReserveStock(StockUpdateRequest) returns (StockUpdateResponse);
+}
+
+message ProductRequest {
+  string productId = 1;
+}
+
+message ProductResponse {
+  string productId = 1;
+  string name = 2;
+  string description = 3;
+  double price = 4;
+  int32 availableQuantity = 5;
+}
+
+message CheckStockRequest {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message CheckStockResponse {
+  bool isAvailable = 1;
+  int32 availableQuantity = 2;
+}
+
+message StockUpdateRequest {
+  string productId = 1;
+  int32 quantity = 2;
+}
+
+message StockUpdateResponse {
+  bool success = 1;
+  string message = 2;
+}
