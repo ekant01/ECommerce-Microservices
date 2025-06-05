@@ -6,12 +6,18 @@ import com.janapure.microservices.cart_service.entities.CartItem;
 import com.janapure.microservices.cart_service.repository.CartItemRepo;
 import com.janapure.microservices.cart_service.repository.CartRepo;
 import com.janapure.microservices.proto.*;
+import io.grpc.Status;
+import io.grpc.StatusRuntimeException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +37,7 @@ public class CartService {
     private ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub;
 
     public CartService(CartRepo cartRepo, CartItemRepo cartItemRepo) {
+        System.out.println("CartService initialized");
         this.cartRepo = cartRepo;
         this.cartItemRepo = cartItemRepo;
     }
@@ -205,6 +212,24 @@ public class CartService {
         UserIdRequest request = UserIdRequest.newBuilder()
                 .setUserId(userId)
                 .build();
+        ProductRequest productRequest = ProductRequest.newBuilder()
+                .setProductId(userId)
+                .build();
+        //ProductResponse productResponse = productServiceBlockingStub.getProductInfo(productRequest);
+
+        try {
+            ProductResponse response = productServiceBlockingStub.getProductInfo(productRequest);
+            // process response
+        } catch (StatusRuntimeException e) {
+            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+                // handle 404-like logic
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getStatus().getDescription());
+            } else {
+                // log and rethrow for other issues
+                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "gRPC error: " + e.getMessage());
+            }
+        }
+        
         return userServiceBlockingStub.validateUser(request).getIsValid();
     }
 
@@ -238,5 +263,19 @@ public class CartService {
         event.setItems(items);
 
         kafkaTemplate.send("checkout.request", event);
+    }
+
+    @KafkaListener(topics = "cart.clear", groupId = "cart-service")
+    public void clearCart(String userId) {
+        System.out.println("Received request to clear cart for user: " + userId);
+        Optional<Cart> cart = cartRepo.findByUserId(userId);
+        if (cart.isEmpty()) {
+            System.out.println("No cart found for user: " + userId);
+            return;
+        }
+        Cart existingCart = cart.get();
+        existingCart.getCartItems().clear();
+        existingCart.setUpdatedAt(LocalDateTime.now());
+        cartRepo.save(existingCart);
     }
 }

@@ -7,6 +7,8 @@ import com.janapure.microservices.product_service.services.ProductService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -41,20 +43,23 @@ public class ProductController {
 
     @RequestMapping(path = "/products",method = POST)
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ProductDTO addProduct(@RequestBody ProductDTO productDTO){
 
         log.info("Adding product: {}", productDTO);
         return productService.addProduct(productDTO);
     }
 
-    @RequestMapping(path = "/product",method = PUT)
+    @RequestMapping(path = "/products",method = PUT)
     @ResponseStatus(HttpStatus.OK)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public ProductDTO updateProduct(@RequestBody ProductDTO productDTO){
         log.info("Updating product: {}", productDTO);
         return productService.updateProduct(productDTO);
     }
 
     @RequestMapping(path = "/product/{productId}",method = DELETE)
+    @PreAuthorize("hasAuthority('ADMIN')")
     public void deleteProduct(@PathVariable String productId){
         log.info("Deleting product with ID: {}", productId);
         productService.deleteProduct(productId);

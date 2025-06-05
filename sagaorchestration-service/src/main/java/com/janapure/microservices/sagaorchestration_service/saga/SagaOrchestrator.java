@@ -20,6 +20,7 @@ public class SagaOrchestrator {
     private static final String NOTIFICATION_SEND_TOPIC = "notification.send";
     private static final String ORDER_UPDATE_TOPIC = "order.update";
     private static final String CART_CLEAR_TOPIC = "cart.clear";
+    private static final String RELEASE_STOCK_TOPIC = "product.release.stock";
 
     private final KafkaTemplate<String, Object> kafkaTemplate;
     private final ObjectMapper objectMapper;
@@ -38,6 +39,7 @@ public class SagaOrchestrator {
 
     @KafkaListener(topics = "order.created")
     public void handleOrderCreated(String event) {
+        System.out.println("Received order created event: " + event);
         processEvent(event, OrderCreatedEvent.class, orderCreated -> {
             PaymentRequest paymentRequest = new PaymentRequest(
                     orderCreated.getOrderId(), orderCreated.getUserId(),
@@ -60,9 +62,16 @@ public class SagaOrchestrator {
 
     @KafkaListener(topics = "payment.failed")
     public void handlePaymentFailure(String event) {
+        System.out.println("Received payment failed event: " + event);
         processEvent(event, PaymentFailedEvent.class, paymentFailed ->
                 kafkaTemplate.send(ORDER_UPDATE_TOPIC, new OrderStatusUpdate(paymentFailed.getOrderId(), "CANCELLED"))
         );
+        // release stock if payment fails
+        // This logic would typically involve calling a product service to release stock
+        processEvent(event, PaymentFailedEvent.class, paymentFailed ->
+                kafkaTemplate.send(RELEASE_STOCK_TOPIC, new OrderStatusUpdate(paymentFailed.getOrderId(), "CANCELLED"))
+        );
+
     }
 
     private <T> void processEvent(String event, Class<T> eventType, java.util.function.Consumer<T> handler) {

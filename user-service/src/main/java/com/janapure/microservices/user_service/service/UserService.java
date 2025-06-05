@@ -117,8 +117,24 @@ public class UserService {
         return userDTO;
     }
 
+//    public ResponseEntity<String> loginUser(LoginDTO loginDTO) {
+//        try{
+//            authenticationManager.authenticate(
+//                    new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
+//            UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getUsername());
+//
+//            String jwt = jwtUtil.generateToken(userDetails.getUsername(),userDetails.getAuthorities().stream()
+//                    .map(GrantedAuthority::getAuthority)
+//                    .collect(Collectors.toList()));
+//            return new ResponseEntity<>(jwt, HttpStatus.OK);
+//        }catch (Exception e){
+//            //log.error("Exception occurred while createAuthenticationToken ", e);
+//            System.out.println("Exception occurred while createAuthenticationToken "+ e);
+//            return new ResponseEntity<>("Incorrect username or password", HttpStatus.BAD_REQUEST);
+//        }
+//    }
     public ResponseEntity<String> loginUser(LoginDTO loginDTO) {
-        try{
+        try {
             authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(loginDTO.getUsername(), loginDTO.getPassword()));
             UserDetails userDetails = userDetailsService.loadUserByUsername(loginDTO.getUsername());

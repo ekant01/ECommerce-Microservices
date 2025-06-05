@@ -6,6 +6,7 @@ import com.janapure.microservices.product_service.model.Product;
 import com.janapure.microservices.product_service.repositories.InventoryRepo;
 import com.janapure.microservices.product_service.repositories.ProductRepo;
 import com.janapure.microservices.proto.*;
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.grpc.server.service.GrpcService;
 
@@ -45,7 +46,9 @@ public class ProductgRPCImpl extends ProductServiceGrpc.ProductServiceImplBase {
 
     @Override
     public void getProductInfo(ProductRequest request, StreamObserver<ProductResponse> responseObserver) {
+
         String productId = request.getProductId();
+        System.out.println("Product request: " + productId);
         Product product = productRepo.findByPdId(productId);
         if (product != null) {
             ProductResponse response = ProductResponse.newBuilder()
@@ -55,10 +58,14 @@ public class ProductgRPCImpl extends ProductServiceGrpc.ProductServiceImplBase {
                     .setDescription(product.getDescription())
                     .build();
             responseObserver.onNext(response);
+            responseObserver.onCompleted();
         } else {
-            responseObserver.onError(new RuntimeException("Product not found"));
+            System.out.println("Product not found: " + productId);
+            //responseObserver.onError(new RuntimeException("Product not found"));
+            responseObserver.onError(
+                    Status.NOT_FOUND.withDescription("Product not found: " + productId).asRuntimeException()
+            );
         }
-        responseObserver.onCompleted();
 
     }
 

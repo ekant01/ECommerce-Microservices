@@ -1,9 +1,11 @@
 package com.janapure.microservices.product_service.services;
 
+import com.janapure.common_security_lib.model.EUserDetails;
 import com.janapure.microservices.product_service.dto.ProductDTO;
 import com.janapure.microservices.product_service.model.Product;
 import com.janapure.microservices.product_service.repositories.ProductRepo;
 import org.springframework.data.domain.Page;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -33,8 +35,8 @@ public class ProductService {
      */
     public ProductDTO addProduct(ProductDTO productDTO) {
         // Here you would typically save the product to the database
-//        EUserDetail userDetail = (EUserDetail) SecurityContextHolder
-//                .getContext().getAuthentication().getPrincipal();
+         EUserDetails userDetails = (EUserDetails) SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
 
         Product product = new Product();
 
@@ -43,8 +45,10 @@ public class ProductService {
         product.setPrice(productDTO.getPrice());
         product.setCategory(productDTO.getCategory());
         product.setAttributes(productDTO.getAttributes());
-        //product.setSellerId(userDetail.getUserId());
+        product.setSellerId(userDetails.getUsername());
         product.setPdId(generateProductId());
+        product.setDeleted(false);
+        product.setAttributes(productDTO.getAttributes());
         product.setCreatedAt(System.currentTimeMillis());
         product.setModifiedAt(System.currentTimeMillis());
 
@@ -115,10 +119,12 @@ public class ProductService {
         return products.stream().map(product -> {
             ProductDTO productDTO = new ProductDTO();
             productDTO.setId(product.getId());
+            productDTO.setPdId(product.getPdId());
             productDTO.setProductName(product.getProductName());
             productDTO.setDescription(product.getDescription());
             productDTO.setPrice(product.getPrice());
             productDTO.setCategory(product.getCategory());
+            productDTO.setSellerId(product.getSellerId());
             productDTO.setAttributes(product.getAttributes());
             productDTO.setCreatedAt(product.getCreatedAt());
             productDTO.setModifiedAt(product.getModifiedAt());
@@ -144,5 +150,12 @@ public class ProductService {
             throw new RuntimeException("Product not found");
         }
     }
+
+    @KafkaListener(topics = "product.release.stock", groupId = "product-service")
+    public void releaseStock(String event) {
+
+    }
+
+
 }
 
