@@ -15,5 +15,5 @@ message ProductListRequest {
 }
 
 message ProductListResponse {
-  repeated string product_ids = 1;
+  map<string, int32> product_ids = 1;
 }

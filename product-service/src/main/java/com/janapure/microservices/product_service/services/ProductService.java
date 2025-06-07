@@ -1,8 +1,13 @@
 package com.janapure.microservices.product_service.services;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.janapure.common_security_lib.model.EUserDetails;
 import com.janapure.microservices.product_service.dto.ProductDTO;
+import com.janapure.microservices.product_service.model.Inventory;
 import com.janapure.microservices.product_service.model.Product;
+import com.janapure.microservices.product_service.repositories.InventoryRepo;
 import com.janapure.microservices.product_service.repositories.ProductRepo;
 import com.janapure.microservices.proto.OrderServiceGrpc;
 import com.janapure.microservices.proto.ProductListRequest;
@@ -14,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -25,6 +31,12 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepo productRepo;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private InventoryRepo inventoryRepo;
 
     @Autowired
     private OrderServiceGrpc.OrderServiceBlockingStub orderServiceBlockingStub;
@@ -160,16 +172,41 @@ public class ProductService {
     }
 
     @KafkaListener(topics = "product.release.stock", groupId = "product-service")
-    public void releaseStock(String event) {
-
+    public void releaseStock(String event) throws JsonProcessingException {
+        JsonNode jsonNode = objectMapper.readTree(event);
+        String productId = jsonNode.get("orderId").asText();
+        String status = jsonNode.get("status").asText();
+        Map<String,Integer> productIds = getProductIdsBySellerId(productId);
+        if (status != null && status.equalsIgnoreCase("COMPLETED")) {
+            // Logic to release stock for the products
+            productIds.forEach(
+                    (id, quantity) -> {
+                        Inventory inventory = inventoryRepo.findByProductId(id);
+                        if (inventory != null) {
+                            try {
+                                inventory.confirmOrder(quantity);
+                                inventoryRepo.save(inventory);
+                            } catch (RuntimeException e) {
+                                System.out.println("Error releasing stock for product ID " + id + ": " + e.getMessage());
+                            }
+                        } else {
+                            System.out.println("Inventory not found for product ID: " + id);
+                        }
+                    }
+            );
+            System.out.println("Releasing stock for products: " + productIds);
+        }
+        if (status!=null && status.equalsIgnoreCase("CANCELLED")) {
+            System.out.println("Releasing stock for products fails: " + productIds);
+        }
     }
 
-    public List<String> getProductIdsBySellerId(String sellerId) {
+    public Map<String,Integer> getProductIdsBySellerId(String orderId) {
         // Fetch product IDs by seller ID
         ProductListRequest request = ProductListRequest.newBuilder()
-                .setOrderId("8487878437474")
+                .setOrderId(orderId)
                 .build();
-        return orderServiceBlockingStub.getProductList(request).getProductIdsList();
+        return orderServiceBlockingStub.getProductList(request).getProductIdsMap();
     }
 
 

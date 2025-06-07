@@ -72,10 +72,4 @@ public class ProductController {
         return productService.getProductById(productId);
     }
 
-    @GetMapping("/ping")
-    public List<String> ping() {
-        System.out.println("Ping received");
-        return productService.getProductIdsBySellerId("userdid");
-    }
-
 }

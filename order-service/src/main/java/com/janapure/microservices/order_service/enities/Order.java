@@ -21,7 +21,6 @@ public class Order {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-
     @Column(name = "order_id", unique = true)
     private String orderId;
 
@@ -40,7 +39,7 @@ public class Order {
     private LocalDateTime orderDate;
 
     @Column(name = "order_items")
-    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<OrderItem> orderItems;
 
 }

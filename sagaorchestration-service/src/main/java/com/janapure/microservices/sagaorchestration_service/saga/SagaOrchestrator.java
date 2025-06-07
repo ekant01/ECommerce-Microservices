@@ -55,8 +55,10 @@ public class SagaOrchestrator {
             kafkaTemplate.send(NOTIFICATION_SEND_TOPIC, new NotificationRequest(
                     paymentSuccess.getUserId(), paymentSuccess.getOrderId(), "Your payment was successful."
             ));
-            kafkaTemplate.send(ORDER_UPDATE_TOPIC, new OrderStatusUpdate(paymentSuccess.getOrderId(), "COMPLETED"));
+            kafkaTemplate.send(ORDER_UPDATE_TOPIC, new OrderStatusUpdate(paymentSuccess.getOrderId(), "PAYMENT_SUCCESS"));
             kafkaTemplate.send(CART_CLEAR_TOPIC, new CartClearEvent(paymentSuccess.getUserId()));
+            // release stock after successful payment
+            kafkaTemplate.send(RELEASE_STOCK_TOPIC, new OrderStatusUpdate(paymentSuccess.getOrderId(), "COMPLETED"));
         });
     }
 
@@ -64,7 +66,7 @@ public class SagaOrchestrator {
     public void handlePaymentFailure(String event) {
         System.out.println("Received payment failed event: " + event);
         processEvent(event, PaymentFailedEvent.class, paymentFailed ->
-                kafkaTemplate.send(ORDER_UPDATE_TOPIC, new OrderStatusUpdate(paymentFailed.getOrderId(), "CANCELLED"))
+                kafkaTemplate.send(ORDER_UPDATE_TOPIC, new OrderStatusUpdate(paymentFailed.getOrderId(), "PAYMENT_FAILED"))
         );
         // release stock if payment fails
         // This logic would typically involve calling a product service to release stock

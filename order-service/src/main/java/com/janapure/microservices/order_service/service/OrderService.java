@@ -20,36 +20,27 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
 public class OrderService {
 
+    @Autowired
     private OrderRepo orderRepo;
 
+    @Autowired
     private OrderItemRepo orderItemRepo;
 
     @Autowired
     private ObjectMapper objectMapper;
 
+    @Autowired
     private ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub;
 
     @Autowired
     private KafkaTemplate<String, Object> kafkaTemplate;
-
-    public OrderService() {
-    }
-
-    public OrderService(OrderRepo orderRepo, OrderItemRepo orderItemRepo, ObjectMapper objectMapper,
-                        ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub,KafkaTemplate<String, Object> kafkaTemplate) {
-        System.out.println("abcd");
-        this.orderRepo = orderRepo;
-        this.orderItemRepo = orderItemRepo;
-        //this.objectMapper = objectMapper;
-        this.productServiceBlockingStub = productServiceBlockingStub;
-        //this.kafkaTemplate = kafkaTemplate;
-    }
 
     @KafkaListener(topics = "order.create.request", groupId = "order-service")
     public void order(String eventJson) {
@@ -62,26 +53,26 @@ public class OrderService {
             System.out.println("Parsed payload: " + payload);
 
             // Check for stock availability
-//            for (OrderCreatePayload.OrderItem item : payload.getItems()) {
-//                // Assuming productServiceBlockingStub has a method to check stock
-//                CheckStockRequest checkStockRequest = CheckStockRequest.newBuilder()
-//                        .setProductId(item.getProductId())
-//                        .setQuantity(item.getQuantity())
-//                        .build();
-//                CheckStockResponse isInStock = productServiceBlockingStub.checkStock(checkStockRequest);
-//                if (!isInStock.getIsAvailable()) {
-//                    throw new RuntimeException("Product " + item.getProductId() + " is out of stock.");
-//                }
-//                // Reserve stock
-//                StockUpdateRequest stockUpdateRequest = StockUpdateRequest.newBuilder()
-//                        .setProductId(item.getProductId())
-//                        .setQuantity(item.getQuantity())
-//                        .build();
-//                 StockUpdateResponse stockUpdateResponse = productServiceBlockingStub.reserveStock(stockUpdateRequest);
-//                if (!stockUpdateResponse.getSuccess()) {
-//                    throw new RuntimeException("Failed to reserve stock for product " + item.getProductId());
-//                }
-//            }
+            for (OrderCreatePayload.OrderItem item : payload.getItems()) {
+                // Assuming productServiceBlockingStub has a method to check stock
+                CheckStockRequest checkStockRequest = CheckStockRequest.newBuilder()
+                        .setProductId(item.getProductId())
+                        .setQuantity(item.getQuantity())
+                        .build();
+                CheckStockResponse isInStock = productServiceBlockingStub.checkStock(checkStockRequest);
+                if (!isInStock.getIsAvailable()) {
+                    throw new RuntimeException("Product " + item.getProductId() + " is out of stock.");
+                }
+                // Reserve stock
+                StockUpdateRequest stockUpdateRequest = StockUpdateRequest.newBuilder()
+                        .setProductId(item.getProductId())
+                        .setQuantity(item.getQuantity())
+                        .build();
+                 StockUpdateResponse stockUpdateResponse = productServiceBlockingStub.reserveStock(stockUpdateRequest);
+                if (!stockUpdateResponse.getSuccess()) {
+                    throw new RuntimeException("Failed to reserve stock for product " + item.getProductId());
+                }
+            }
             // proceed to create order
             Order order = new Order();
             order.setUserId(payload.getUserId());
@@ -90,16 +81,21 @@ public class OrderService {
             order.setOrderStatus("PAYMENT_PENDING");
             order.setPaymentMode(payload.getPaymentMode());
             order.setOrderDate(LocalDateTime.now());
-            order.setOrderItems(payload.getItems().stream().map(item -> {
+
+            List<OrderItem> orderItems = payload.getItems().stream().map(item -> {
                 OrderItem orderItem = new OrderItem();
                 orderItem.setProductId(item.getProductId());
                 orderItem.setProductName(item.getProductName());
                 orderItem.setQuantity(item.getQuantity());
                 orderItem.setPrice(item.getPrice());
+                orderItem.setOrder(order);
                 return orderItem;
-            }).collect(Collectors.toList()));
+            }).collect(Collectors.toList());
 
-            //orderRepo.save(order);
+            order.setOrderItems(orderItems);
+
+            orderRepo.save(order);
+
 
             OrderCreatedEvent orderCreatedEvent = new OrderCreatedEvent();
             orderCreatedEvent.setOrderId(order.getOrderId());
