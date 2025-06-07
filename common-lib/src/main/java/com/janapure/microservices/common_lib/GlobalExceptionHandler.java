@@ -7,9 +7,11 @@ import com.janapure.microservices.common_lib.exception.RestError;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Component;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.authorization.AuthorizationDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+
 
 import java.util.Arrays;
 
@@ -25,6 +27,18 @@ public class GlobalExceptionHandler {
              status = HttpStatus.valueOf(Integer.parseInt(restError.getStatus()));
          }
          System.out.println("Exception occurred: " + status);
+         return new ResponseEntity<>(restError, status);
+     }
+
+     @ExceptionHandler(AuthorizationDeniedException.class)
+     public  ResponseEntity<?> AccessDeniedException(HttpServletRequest request, AccessDeniedException ex) {
+         System.out.println("AccessDeniedException occurred: " + ex.getMessage());
+         HttpStatus status = HttpStatus.FORBIDDEN;
+         RestError restError = new RestError();
+         restError.setStatus(String.valueOf(status.value()));
+         restError.setCode("ECP-403");
+         restError.setError("ACCESS_DENIED");
+         restError.setMessage("Access is denied for the requested resource.");
          return new ResponseEntity<>(restError, status);
      }
 

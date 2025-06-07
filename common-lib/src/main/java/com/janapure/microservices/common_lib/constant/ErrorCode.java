@@ -7,7 +7,9 @@ import lombok.Getter;
 public enum ErrorCode {
 
     USER_NOT_FOUND("ECP-404", "User not found"),
-    UNAUTHORIZED("USR-401", "Unauthorized access");
+    UNAUTHORIZED("USR-401", "Unauthorized access"),
+    ACCESS_DENIED("ECP-403", "Access denied"),;
+
 
     private final String code;
     private final String message;
