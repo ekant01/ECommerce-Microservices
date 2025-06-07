@@ -1,5 +1,8 @@
 package com.janapure.microservices.cart_service.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.janapure.microservices.cart_service.dto.*;
 import com.janapure.microservices.cart_service.entities.Cart;
 import com.janapure.microservices.cart_service.entities.CartItem;
@@ -10,6 +13,8 @@ import com.janapure.microservices.common_lib.exception.PlatformException;
 import com.janapure.microservices.proto.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
+import jakarta.transaction.Transactional;
+import org.bson.json.JsonObject;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -38,6 +43,9 @@ public class CartService {
 
     @Autowired
     private ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public CartService(CartRepo cartRepo, CartItemRepo cartItemRepo) {
         System.out.println("CartService initialized");
@@ -270,10 +278,13 @@ public class CartService {
 //        kafkaTemplate.send("checkout.request", event);
 //    }
 
+    @Transactional
     @KafkaListener(topics = "cart.clear", groupId = "cart-service")
-    public void clearCart(String userId) {
+    public void clearCart(String userId) throws JsonProcessingException {
+        // {"userId":"John3@gmail.com"} convert this to JsonObject
+        JsonNode jsonNode =  objectMapper.readTree(userId);
         System.out.println("Received request to clear cart for user: " + userId);
-        Optional<Cart> cart = cartRepo.findByUserId(userId);
+        Optional<Cart> cart = cartRepo.findByUserId(jsonNode.get("userId").asText());
         if (cart.isEmpty()) {
             System.out.println("No cart found for user: " + userId);
             return;
