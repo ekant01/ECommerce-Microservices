@@ -3,6 +3,7 @@ package com.janapure.microservices.cart_service.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.janapure.common_security_lib.model.EUserDetails;
 import com.janapure.microservices.cart_service.dto.*;
 import com.janapure.microservices.cart_service.entities.Cart;
 import com.janapure.microservices.cart_service.entities.CartItem;
@@ -152,7 +153,9 @@ public class CartService {
 //        cart.getCartItems().get(0).setPrice(100.0);
 //        cart.getCartItems().get(0).setAddedAt(LocalDateTime.now());
 //        cart.getCartItems().get(0).setCart(cart);
-
+        EUserDetails userDetails = (EUserDetails) org.springframework.security.core.context.SecurityContextHolder
+                .getContext().getAuthentication().getPrincipal();
+        System.out.println("abc.."+userDetails.getUsername()+"+"+request.getUserId());
         OrderCreateEvent event = new OrderCreateEvent();
         event.setUserId(request.getUserId());
         event.setPaymentMode(request.getPaymentMode());
