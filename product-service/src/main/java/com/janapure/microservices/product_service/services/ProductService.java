@@ -11,6 +11,8 @@ import com.janapure.microservices.product_service.repositories.InventoryRepo;
 import com.janapure.microservices.product_service.repositories.ProductRepo;
 import com.janapure.microservices.proto.OrderServiceGrpc;
 import com.janapure.microservices.proto.ProductListRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.kafka.annotation.KafkaListener;
@@ -29,6 +31,8 @@ import java.util.UUID;
 
 @Service
 public class ProductService {
+
+    private static final Logger logger = LoggerFactory.getLogger(ProductService.class);
 
     private final ProductRepo productRepo;
 
@@ -188,16 +192,30 @@ public class ProductService {
                                 inventoryRepo.save(inventory);
                             } catch (RuntimeException e) {
                                 System.out.println("Error releasing stock for product ID " + id + ": " + e.getMessage());
+                                logger.info("Error releasing stock for product ID " + id + ": " + e.getMessage());
                             }
                         } else {
-                            System.out.println("Inventory not found for product ID: " + id);
+                            logger.info("Inventory not found for product ID: " + id);
                         }
                     }
             );
-            System.out.println("Releasing stock for products: " + productIds);
         }
         if (status!=null && status.equalsIgnoreCase("CANCELLED")) {
-            System.out.println("Releasing stock for products fails: " + productIds);
+            productIds.forEach(
+                    (id, quantity) -> {
+                        Inventory inventory = inventoryRepo.findByProductId(id);
+                        if (inventory != null) {
+                            try {
+                                inventory.releaseStock(quantity);
+                                inventoryRepo.save(inventory);
+                            } catch (RuntimeException e) {
+                                logger.info("Error releasing stock for product ID " + id + ": " + e.getMessage());
+                            }
+                        } else {
+                            logger.info("Inventory not found for product ID: " + id);
+                        }
+                    }
+            );
         }
     }
 
@@ -208,7 +226,6 @@ public class ProductService {
                 .build();
         return orderServiceBlockingStub.getProductList(request).getProductIdsMap();
     }
-
 
 }
 
