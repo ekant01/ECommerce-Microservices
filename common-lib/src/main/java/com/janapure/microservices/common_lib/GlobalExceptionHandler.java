@@ -70,8 +70,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<?> handleAllExceptions(Exception ex) {
-        ex.printStackTrace(); // 👈 at least print stack trace
-        return ResponseEntity.status(500).body("Unhandled exception: " + ex.getMessage());
+         HttpStatus status = HttpStatus.INTERNAL_SERVER_ERROR;
+         RestError restError = new RestError();
+         restError.setStatus(String.valueOf(status.value()));
+         restError.setCode("ECP-500");
+         restError.setError("INTERNAL_SERVER_ERROR");
+         restError.setMessage("An unexpected error occurred: " + ex.getMessage());
+         return new ResponseEntity<>(restError, status);
     }
 
 }
