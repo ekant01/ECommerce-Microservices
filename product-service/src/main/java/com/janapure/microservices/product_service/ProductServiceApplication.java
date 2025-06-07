@@ -7,7 +7,8 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 
 @SpringBootApplication
-@ComponentScan(basePackages = "com.janapure.microservices.product_service")
+@ComponentScan(basePackages = {"com.janapure.microservices.product_service",
+		"com.janapure.microservices.common_lib"})
 @EnableMethodSecurity
 @EnableDiscoveryClient
 public class ProductServiceApplication {

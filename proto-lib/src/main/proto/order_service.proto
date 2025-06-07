@@ -1,18 +1,19 @@
 syntax = "proto3";
 
-package product;
+package order;
 
 option java_multiple_files = true;
 option java_package = "com.janapure.microservices.proto";
 option java_outer_classname = "OrderProto";
 
-service ProductService {
-  rpc GetProductIds(OrderIdRequest) returns (OrderIdResponse);
+service OrderService {
+  rpc GetProductList(ProductListRequest) returns (ProductListResponse);
 }
 
-message OrderIdRequest {
+message ProductListRequest {
   string order_id = 1;
 }
-message OrderIdResponse {
+
+message ProductListResponse {
   repeated string product_ids = 1;
 }

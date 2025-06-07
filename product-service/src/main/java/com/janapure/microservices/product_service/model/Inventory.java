@@ -26,9 +26,9 @@ public class Inventory {
 
     private String status; // Consider using an enum for status
 
-    private Instant createdAt;
+    private Long createdAt;
 
-    private Instant updatedAt;
+    private Long updatedAt;
 
     private String createdBy;
 

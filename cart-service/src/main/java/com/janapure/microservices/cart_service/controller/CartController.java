@@ -59,15 +59,15 @@ public class CartController {
         return ResponseEntity.ok("Checkout initiated for user: " + request.getUserId());
     }
 
-    @GetMapping("/cart/health/{userId}")
-    public ResponseEntity<Boolean> healthCheck(@PathVariable String userId) {
-
-        return ResponseEntity.ok(cartService.healthCheck(userId));
-    }
-
-    @PostMapping("/cart/checkout/dummy")
-    public ResponseEntity<String> checkoutDummy(@RequestBody CheckOutRequest request) {
-        cartService.checkoutCartDummy(request);
-        return ResponseEntity.ok("Checkout initiated for user: " + request.getUserId());
-    }
+//    @GetMapping("/cart/health/{userId}")
+//    public ResponseEntity<Boolean> healthCheck(@PathVariable String userId) {
+//
+//        return ResponseEntity.ok(cartService.healthCheck(userId));
+//    }
+//
+//    @PostMapping("/cart/checkout/dummy")
+//    public ResponseEntity<String> checkoutDummy(@RequestBody CheckOutRequest request) {
+//        cartService.checkoutCartDummy(request);
+//        return ResponseEntity.ok("Checkout initiated for user: " + request.getUserId());
+//    }
 }

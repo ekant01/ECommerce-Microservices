@@ -5,6 +5,8 @@ import com.janapure.microservices.cart_service.entities.Cart;
 import com.janapure.microservices.cart_service.entities.CartItem;
 import com.janapure.microservices.cart_service.repository.CartItemRepo;
 import com.janapure.microservices.cart_service.repository.CartRepo;
+import com.janapure.microservices.common_lib.constant.ErrorCode;
+import com.janapure.microservices.common_lib.exception.PlatformException;
 import com.janapure.microservices.proto.*;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -49,7 +52,7 @@ public class CartService {
                 .build();
         boolean isValidUser = userServiceBlockingStub.validateUser(userIdRequest).getIsValid();
         if (!isValidUser) {
-            throw new RuntimeException("Invalid user ID: " + request.getUserId());
+            throw new PlatformException(ErrorCode.USER_NOT_FOUND, "User not found: " + request.getUserId());
         }
         // Check if the product is valid
         ProductResponse productResponse = productServiceBlockingStub
@@ -67,7 +70,7 @@ public class CartService {
                     .build();
             CheckStockResponse checkStockResponse = productServiceBlockingStub.checkStock(checkStockRequest);
             if (!checkStockResponse.getIsAvailable()) {
-                throw new RuntimeException("Product is out of stock");
+                throw new PlatformException(ErrorCode.USER_NOT_FOUND, "Product is out of stock " + request.getProductId());
             }
 
         }
@@ -76,6 +79,8 @@ public class CartService {
                     Cart newCart = new Cart();
                     newCart.setUserId(request.getUserId());
                     newCart.setCreatedAt(LocalDateTime.now());
+                    newCart.setUpdatedAt(LocalDateTime.now());
+                    newCart.setCartItems(new ArrayList<>());
                     return newCart;
                 });
 
@@ -126,7 +131,7 @@ public class CartService {
 
     public void checkoutCart(CheckOutRequest request) {
         Cart cart = cartRepo.findByUserId(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+                .orElseThrow(() -> new PlatformException(ErrorCode.USER_NOT_FOUND,"Cart not found"));
 
 //        Cart cart = new Cart();
 //        cart.setUserId("abc@Gmai.com");
@@ -208,62 +213,62 @@ public class CartService {
         return mapToDTO(cart);
     }
 
-    public Boolean healthCheck(String userId) {
-        UserIdRequest request = UserIdRequest.newBuilder()
-                .setUserId(userId)
-                .build();
-        ProductRequest productRequest = ProductRequest.newBuilder()
-                .setProductId(userId)
-                .build();
-        //ProductResponse productResponse = productServiceBlockingStub.getProductInfo(productRequest);
+//    public Boolean healthCheck(String userId) {
+//        UserIdRequest request = UserIdRequest.newBuilder()
+//                .setUserId(userId)
+//                .build();
+//        ProductRequest productRequest = ProductRequest.newBuilder()
+//                .setProductId(userId)
+//                .build();
+//        //ProductResponse productResponse = productServiceBlockingStub.getProductInfo(productRequest);
+//
+//        try {
+//            ProductResponse response = productServiceBlockingStub.getProductInfo(productRequest);
+//            // process response
+//        } catch (StatusRuntimeException e) {
+//            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
+//                // handle 404-like logic
+//                throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getStatus().getDescription());
+//            } else {
+//                // log and rethrow for other issues
+//                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "gRPC error: " + e.getMessage());
+//            }
+//        }
+//
+//        return userServiceBlockingStub.validateUser(request).getIsValid();
+//    }
 
-        try {
-            ProductResponse response = productServiceBlockingStub.getProductInfo(productRequest);
-            // process response
-        } catch (StatusRuntimeException e) {
-            if (e.getStatus().getCode() == Status.Code.NOT_FOUND) {
-                // handle 404-like logic
-                throw new ResponseStatusException(HttpStatus.NOT_FOUND, e.getStatus().getDescription());
-            } else {
-                // log and rethrow for other issues
-                throw new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "gRPC error: " + e.getMessage());
-            }
-        }
-        
-        return userServiceBlockingStub.validateUser(request).getIsValid();
-    }
-
-    public void checkoutCartDummy(CheckOutRequest request) {
-//        Cart cart = cartRepo.findByUserId(request.getUserId())
-//                .orElseThrow(() -> new RuntimeException("Cart not found"));
-
-        Cart cart = new Cart();
-        cart.setUserId("abc@Gmai.com");
-        cart.setCreatedAt(LocalDateTime.now());
-        cart.setUpdatedAt(LocalDateTime.now());
-        cart.setCartItems(List.of(new CartItem()));
-        cart.getCartItems().get(0).setProductId("123");
-        cart.getCartItems().get(0).setProductName("Product 1");
-        cart.getCartItems().get(0).setQuantity(2);
-        cart.getCartItems().get(0).setPrice(100.0);
-        cart.getCartItems().get(0).setAddedAt(LocalDateTime.now());
-        cart.getCartItems().get(0).setCart(cart);
-        OrderCreateEvent event = new OrderCreateEvent();
-        event.setUserId(request.getUserId());
-        event.setPaymentMode(request.getPaymentMode());
-        List<OrderCreateEvent.OrderItem> items = cart.getCartItems().stream().map(ci -> {
-            OrderCreateEvent.OrderItem item = new OrderCreateEvent.OrderItem();
-            item.setProductId(ci.getProductId());
-            item.setProductName(ci.getProductName());
-            item.setQuantity(ci.getQuantity());
-            item.setPrice(ci.getPrice());
-            return item;
-        }).toList();
-
-        event.setItems(items);
-
-        kafkaTemplate.send("checkout.request", event);
-    }
+//    public void checkoutCartDummy(CheckOutRequest request) {
+////        Cart cart = cartRepo.findByUserId(request.getUserId())
+////                .orElseThrow(() -> new RuntimeException("Cart not found"));
+//
+//        Cart cart = new Cart();
+//        cart.setUserId("abc@Gmai.com");
+//        cart.setCreatedAt(LocalDateTime.now());
+//        cart.setUpdatedAt(LocalDateTime.now());
+//        cart.setCartItems(List.of(new CartItem()));
+//        cart.getCartItems().get(0).setProductId("123");
+//        cart.getCartItems().get(0).setProductName("Product 1");
+//        cart.getCartItems().get(0).setQuantity(2);
+//        cart.getCartItems().get(0).setPrice(100.0);
+//        cart.getCartItems().get(0).setAddedAt(LocalDateTime.now());
+//        cart.getCartItems().get(0).setCart(cart);
+//        OrderCreateEvent event = new OrderCreateEvent();
+//        event.setUserId(request.getUserId());
+//        event.setPaymentMode(request.getPaymentMode());
+//        List<OrderCreateEvent.OrderItem> items = cart.getCartItems().stream().map(ci -> {
+//            OrderCreateEvent.OrderItem item = new OrderCreateEvent.OrderItem();
+//            item.setProductId(ci.getProductId());
+//            item.setProductName(ci.getProductName());
+//            item.setQuantity(ci.getQuantity());
+//            item.setPrice(ci.getPrice());
+//            return item;
+//        }).toList();
+//
+//        event.setItems(items);
+//
+//        kafkaTemplate.send("checkout.request", event);
+//    }
 
     @KafkaListener(topics = "cart.clear", groupId = "cart-service")
     public void clearCart(String userId) {

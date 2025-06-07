@@ -73,9 +73,9 @@ public class ProductController {
     }
 
     @GetMapping("/ping")
-    public String ping() {
+    public List<String> ping() {
         System.out.println("Ping received");
-        return "pong";
+        return productService.getProductIdsBySellerId("userdid");
     }
 
 }

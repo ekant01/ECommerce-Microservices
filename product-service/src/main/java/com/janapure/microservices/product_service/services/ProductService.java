@@ -4,6 +4,9 @@ import com.janapure.common_security_lib.model.EUserDetails;
 import com.janapure.microservices.product_service.dto.ProductDTO;
 import com.janapure.microservices.product_service.model.Product;
 import com.janapure.microservices.product_service.repositories.ProductRepo;
+import com.janapure.microservices.proto.OrderServiceGrpc;
+import com.janapure.microservices.proto.ProductListRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.security.core.context.SecurityContext;
@@ -22,6 +25,9 @@ import java.util.UUID;
 public class ProductService {
 
     private final ProductRepo productRepo;
+
+    @Autowired
+    private OrderServiceGrpc.OrderServiceBlockingStub orderServiceBlockingStub;
 
     public ProductService(ProductRepo productRepo) {
         this.productRepo = productRepo;
@@ -58,6 +64,8 @@ public class ProductService {
         productDTO.setPdId(product.getPdId());
         productDTO.setCreatedAt(product.getCreatedAt());
         productDTO.setModifiedAt(product.getModifiedAt());
+        productDTO.setId(product.getId());
+        productDTO.setSellerId(product.getSellerId());
 
         return productDTO;
     }
@@ -154,6 +162,14 @@ public class ProductService {
     @KafkaListener(topics = "product.release.stock", groupId = "product-service")
     public void releaseStock(String event) {
 
+    }
+
+    public List<String> getProductIdsBySellerId(String sellerId) {
+        // Fetch product IDs by seller ID
+        ProductListRequest request = ProductListRequest.newBuilder()
+                .setOrderId("8487878437474")
+                .build();
+        return orderServiceBlockingStub.getProductList(request).getProductIdsList();
     }
 
 

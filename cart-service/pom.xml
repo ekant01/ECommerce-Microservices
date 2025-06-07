@@ -87,7 +87,11 @@
 			<artifactId>protobuf-java</artifactId>
 			<version>4.30.2</version> <!-- or match your protoc version -->
 		</dependency>
-
+		<dependency>
+			<groupId>com.janapure.microservices</groupId>
+			<artifactId>common-lib</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 	<dependencyManagement>
 		<dependencies>
